@@ -15,6 +15,7 @@ from nav_msgs.msg import Odometry
 from navigator_tools import rosmsg_to_numpy, odometry_to_numpy
 import navigator_msgs.srv as navigator_srvs
 
+
 class Navigator(object):
     def __init__(self, nh):
         self.nh = nh
@@ -26,9 +27,9 @@ class Navigator(object):
     def _init(self):
         self._moveto_action_client = yield action.ActionClient(self.nh, 'moveto', MoveToAction)
         self._odom_sub = yield self.nh.subscribe('odom', Odometry)
-        self._ecef_odom_sub = yield self.nh.subscribe('absodom', Odometry)
-
+        
         self._change_wrench = yield self.nh.get_service_client('/change_wrench', navigator_srvs.WrenchSelect)
+        #self._enu_odom_sub = yield self.nh.subscribe('world_odom', Odometry)
         self.tf_listener = yield tf.TransformListener(self.nh)
 
         print "Waiting for odom..."
@@ -51,7 +52,7 @@ class Navigator(object):
         return PoseEditor2(self, 'enu')
 
     def change_wrench(self, source):
-        return self._change_wrench(navigator_srvs.WrenchSelectRequest(source))
+        yield self._change_wrench(navigator_srvs.WrenchSelectRequest(source))
 
     def vision_request(self, request_name, **kwargs):
         assert request_name in self._vision_proxies.keys(), "Unknown request: {}".format(request_name)
